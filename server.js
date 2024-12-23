@@ -31,28 +31,23 @@ const appendProductUrlToCsv = (url) => {
 const scrollToBottom = async (page) => {
   let previousHeight;
   let currentHeight = await page.evaluate(() => document.body.scrollHeight);
-  let iteration = 0;
-  const maxIterations = 10;
 
   do {
     previousHeight = currentHeight;
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     await new Promise((resolve) => setTimeout(resolve, 1000));
     currentHeight = await page.evaluate(() => document.body.scrollHeight);
-    iteration++;
-  } while (currentHeight > previousHeight && iteration < maxIterations);
+  } while (currentHeight > previousHeight);
 };
 
 // Extract product links from the current page
 const extractProductLinks = async (page) => {
   const productLinkPatterns = [
-    '/p/', '/dp/', '/product/', '/itm/', '/b/', '/ecommerce/product/', '/item/', '/en-in/',
+    '/p/', '/dp/', '/product/', '/itm/', '/b/', '/ecommerce/product/', '/item/', '/en-in/'
   ];
 
-  return await page.$$eval(
-    'a',
-    (anchors, patterns) =>
-      anchors.map((a) => a.href).filter((link) => patterns.some((pattern) => link.includes(pattern))),
+  return await page.$$eval('a', (anchors, patterns) =>
+    anchors.map((a) => a.href).filter((link) => patterns.some((pattern) => link.includes(pattern))),
     productLinkPatterns
   );
 };
@@ -90,7 +85,8 @@ const crawl = async ({ page, data }) => {
     );
 
     for (const link of links) {
-      await cluster.queue({ url: link, depth: depth , domain, seenUrls });
+      console.log(`Queueing link: ${link}`);
+      await cluster.queue({ url: link, depth: depth - 1, domain, seenUrls });
     }
   } catch (error) {
     console.error(`Failed to crawl: ${url}`, error);
@@ -117,7 +113,8 @@ const main = async (inputSites) => {
     const domain = new URL(site).hostname;
     const seenUrls = new Set();
 
-    console.log(`Starting crawl for: ${site}`);
+    console.log(`Enqueuing site: ${site}`);
+    // Queue the initial site for each domain
     await cluster.queue({ url: site, depth: MAX_DEPTH, domain, seenUrls });
   }
 
