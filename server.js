@@ -7,8 +7,8 @@ const app = express();
 
 // Middleware to parse JSON body
 app.use(express.json());
-const chromeExecutablePath = process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath();
-console.log('Puppeteer executable path:', chromeExecutablePath);
+const executablePath = puppeteer.executablePath();
+console.log('Puppeteer executable path:', executablePath);
 // Constants
 const MAX_DEPTH = 2;
 const FILE_PATH = 'product_urls.csv';
@@ -102,7 +102,7 @@ const main = async (inputSites) => {
     puppeteerOptions: {
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],// Render-specific flags
-      executablePath: chromeExecutablePath, // Use Puppeteer's bundled Chromium
+      executablePath: executablePath, // Use Puppeteer's bundled Chromium
     },
   });
 
