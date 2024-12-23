@@ -92,7 +92,11 @@ const main = async (inputSites) => {
   const cluster = await Cluster.launch({
     concurrency: Cluster.CONCURRENCY_PAGE,
     maxConcurrency: MAX_CONCURRENCY,
-    puppeteerOptions: { headless: true },
+    puppeteerOptions: {
+      headless: true,
+      executablePath: '/opt/render/.cache/puppeteer/chrome-linux/chrome', // Chromium path on Render
+      args: ['--no-sandbox', '--disable-setuid-sandbox'], // Render-specific flags
+    },
   });
 
   cluster.task(crawl);
