@@ -94,11 +94,10 @@ const main = async (inputSites) => {
     maxConcurrency: MAX_CONCURRENCY,
     puppeteerOptions: {
       headless: true,
-      executablePath: '/opt/render/.cache/puppeteer/chrome-linux/chrome', // Chromium path on Render
-      args: ['--no-sandbox', '--disable-setuid-sandbox'], // Render-specific flags
+      args: ['--no-sandbox', '--disable-setuid-sandbox'], // Required for Render
     },
   });
-
+  
   cluster.task(crawl);
 
   for (const site of sitesToCrawl) {
