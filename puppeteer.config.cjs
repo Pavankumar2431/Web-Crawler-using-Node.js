@@ -1,10 +1,5 @@
-import { join } from 'path';
-
+const { join } = require('path');
 /**
- * @type {import("puppeteer").Configuration}
- */
-const config = {
-  cacheDirectory: join(new URL('.', import.meta.url).pathname, '.cache', 'puppeteer'),
-};
-
-export default config;
+* @type {import("puppeteer").Configuration}
+*/
+module.exports = {cacheDirectory: join(__dirname, '.cache', 'puppeteer')};
