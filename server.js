@@ -90,7 +90,7 @@ const crawl = async ({ page, data }) => {
     );
 
     for (const link of links) {
-      await cluster.queue({ url: link, depth: depth - 1, domain, seenUrls });
+      await cluster.queue({ url: link, depth: depth , domain, seenUrls });
     }
   } catch (error) {
     console.error(`Failed to crawl: ${url}`, error);
