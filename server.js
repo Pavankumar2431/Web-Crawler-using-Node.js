@@ -99,7 +99,8 @@ const main = async (inputSites) => {
     maxConcurrency: MAX_CONCURRENCY,
     puppeteerOptions: {
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'], // Render-specific flags
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],// Render-specific flags
+      executablePath: require('puppeteer').executablePath(), // Use Puppeteer's bundled Chromium
     },
   });
 
