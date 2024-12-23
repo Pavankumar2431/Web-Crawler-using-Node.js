@@ -1,6 +1,7 @@
 import express from 'express';
 import { Cluster } from 'puppeteer-cluster';
 import * as fs from 'fs';
+import path from 'path';
 
 const app = express();
 
@@ -9,7 +10,7 @@ app.use(express.json());
 
 // Constants
 const MAX_DEPTH = 2;
-const FILE_PATH = 'product_urls.csv';
+const FILE_PATH = path.join(__dirname, 'product_urls.csv');
 const MAX_SITES = 10;
 const MAX_CONCURRENCY = 5;
 
@@ -88,14 +89,12 @@ const crawl = async ({ page, data }) => {
 // Main function to handle the crawling process
 const main = async (inputSites) => {
   const sitesToCrawl = inputSites.slice(0, MAX_SITES);
-  
-
   const cluster = await Cluster.launch({
     concurrency: Cluster.CONCURRENCY_PAGE,
     maxConcurrency: MAX_CONCURRENCY,
     puppeteerOptions: {
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'], // Required for Render
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
     },
   });
 
@@ -120,6 +119,15 @@ app.post('/start-crawl', async (req, res) => {
 
   if (!websites || !Array.isArray(websites)) {
     return res.status(400).json({ error: 'Please provide an array of website domains.' });
+  }
+
+  // Clear the file before starting a new crawl
+  try {
+    fs.writeFileSync(FILE_PATH, 'Product URL\n', 'utf8');
+    console.log('File cleared successfully.');
+  } catch (error) {
+    console.error('Error clearing the file:', error);
+    return res.status(500).json({ error: 'Failed to clear the file.' });
   }
 
   try {
@@ -150,7 +158,13 @@ app.get('/view-data', (req, res) => {
     return res.status(404).json({ error: 'No data available to view.' });
   }
 
-  const data = fs.readFileSync(FILE_PATH, 'utf8').split('\n').filter((line) => line).map((line) => ({ url: line }));
+  const data = fs
+    .readFileSync(FILE_PATH, 'utf8')
+    .split('\n')
+    .slice(1) // Skip header
+    .filter((line) => line) // Remove empty lines
+    .map((line) => ({ url: line }));
+
   res.json(data);
 });
 
