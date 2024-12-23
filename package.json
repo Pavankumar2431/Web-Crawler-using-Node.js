@@ -1,25 +1,22 @@
 {
   "name": "crawler",
   "version": "1.0.0",
-  "main": "index.js",
+  "type": "module",
+  "description": "",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "npx puppeteer install"
   },
-  "type": "module",
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "axios": "^1.7.9",
     "cheerio": "^1.0.0",
     "crawler": "^2.0.2",
     "csv-write-stream": "^2.0.0",
     "express": "^4.21.2",
-    "fetch": "^1.1.0",
-    "fs": "^0.0.1-security",
     "node-fetch": "^3.3.2",
     "puppeteer": "^23.11.1",
     "puppeteer-cluster": "^0.24.0",
