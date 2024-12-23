@@ -1,6 +1,7 @@
 import express from 'express';
 import { Cluster } from 'puppeteer-cluster';
 import * as fs from 'fs';
+import puppeteer from 'puppeteer';
 
 const app = express();
 
@@ -100,7 +101,7 @@ const main = async (inputSites) => {
     puppeteerOptions: {
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],// Render-specific flags
-      executablePath: require('puppeteer').executablePath(), // Use Puppeteer's bundled Chromium
+      executablePath: puppeteer.executablePath(), // Use Puppeteer's bundled Chromium
     },
   });
 
