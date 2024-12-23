@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 
 const app = express();
 app.use(express.json());
+
 // Get the directory name from import.meta.url
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,23 +31,28 @@ const appendProductUrlToCsv = (url) => {
 const scrollToBottom = async (page) => {
   let previousHeight;
   let currentHeight = await page.evaluate(() => document.body.scrollHeight);
+  let iteration = 0;
+  const maxIterations = 10;
 
   do {
     previousHeight = currentHeight;
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     await new Promise((resolve) => setTimeout(resolve, 1000));
     currentHeight = await page.evaluate(() => document.body.scrollHeight);
-  } while (currentHeight > previousHeight);
+    iteration++;
+  } while (currentHeight > previousHeight && iteration < maxIterations);
 };
 
 // Extract product links from the current page
 const extractProductLinks = async (page) => {
   const productLinkPatterns = [
-    '/p/', '/dp/', '/product/', '/itm/', '/b/', '/ecommerce/product/', '/item/', '/en-in/'
+    '/p/', '/dp/', '/product/', '/itm/', '/b/', '/ecommerce/product/', '/item/', '/en-in/',
   ];
 
-  return await page.$$eval('a', (anchors, patterns) =>
-    anchors.map((a) => a.href).filter((link) => patterns.some((pattern) => link.includes(pattern))),
+  return await page.$$eval(
+    'a',
+    (anchors, patterns) =>
+      anchors.map((a) => a.href).filter((link) => patterns.some((pattern) => link.includes(pattern))),
     productLinkPatterns
   );
 };
@@ -67,7 +73,10 @@ const crawl = async ({ page, data }) => {
 
     // Extract and save product links
     const productLinks = await extractProductLinks(page);
-    productLinks.forEach((link) => appendProductUrlToCsv(link));
+    productLinks.forEach((link) => {
+      console.log(`Product link found: ${link}`);
+      appendProductUrlToCsv(link);
+    });
 
     // Extract additional links for further crawling
     const links = await page.$$eval('a', (anchors) =>
@@ -91,6 +100,8 @@ const crawl = async ({ page, data }) => {
 // Main function to handle the crawling process
 const main = async (inputSites) => {
   const sitesToCrawl = inputSites.slice(0, MAX_SITES);
+  console.log('Sites to crawl:', sitesToCrawl);
+
   const cluster = await Cluster.launch({
     concurrency: Cluster.CONCURRENCY_PAGE,
     maxConcurrency: MAX_CONCURRENCY,
