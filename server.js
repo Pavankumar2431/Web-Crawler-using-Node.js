@@ -2,15 +2,17 @@ import express from 'express';
 import { Cluster } from 'puppeteer-cluster';
 import * as fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 const app = express();
 
-// Middleware to parse JSON body
-app.use(express.json());
+// Get the directory name from import.meta.url
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Constants
-const MAX_DEPTH = 2;
 const FILE_PATH = path.join(__dirname, 'product_urls.csv');
+const MAX_DEPTH = 2;
 const MAX_SITES = 10;
 const MAX_CONCURRENCY = 5;
 
