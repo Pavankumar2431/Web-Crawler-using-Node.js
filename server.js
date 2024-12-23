@@ -1,19 +1,15 @@
 import express from 'express';
 import { Cluster } from 'puppeteer-cluster';
 import * as fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 const app = express();
+
+// Middleware to parse JSON body
 app.use(express.json());
 
-// Get the directory name from import.meta.url
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 // Constants
-const FILE_PATH = path.join(__dirname, 'product_urls.csv');
 const MAX_DEPTH = 2;
+const FILE_PATH = 'product_urls.csv';
 const MAX_SITES = 10;
 const MAX_CONCURRENCY = 5;
 
@@ -43,11 +39,13 @@ const scrollToBottom = async (page) => {
 // Extract product links from the current page
 const extractProductLinks = async (page) => {
   const productLinkPatterns = [
-    '/p/', '/dp/', '/product/', '/itm/', '/b/', '/ecommerce/product/', '/item/', '/en-in/'
+    '/p/', '/dp/', '/product/', '/itm/', '/b/', '/ecommerce/product/', '/item/', '/en-in/',
   ];
 
-  return await page.$$eval('a', (anchors, patterns) =>
-    anchors.map((a) => a.href).filter((link) => patterns.some((pattern) => link.includes(pattern))),
+  return await page.$$eval(
+    'a',
+    (anchors, patterns) =>
+      anchors.map((a) => a.href).filter((link) => patterns.some((pattern) => link.includes(pattern))),
     productLinkPatterns
   );
 };
@@ -68,10 +66,7 @@ const crawl = async ({ page, data }) => {
 
     // Extract and save product links
     const productLinks = await extractProductLinks(page);
-    productLinks.forEach((link) => {
-      console.log(`Product link found: ${link}`);
-      appendProductUrlToCsv(link);
-    });
+    productLinks.forEach((link) => appendProductUrlToCsv(link));
 
     // Extract additional links for further crawling
     const links = await page.$$eval('a', (anchors) =>
@@ -85,7 +80,6 @@ const crawl = async ({ page, data }) => {
     );
 
     for (const link of links) {
-      console.log(`Queueing link: ${link}`);
       await cluster.queue({ url: link, depth: depth - 1, domain, seenUrls });
     }
   } catch (error) {
@@ -96,14 +90,16 @@ const crawl = async ({ page, data }) => {
 // Main function to handle the crawling process
 const main = async (inputSites) => {
   const sitesToCrawl = inputSites.slice(0, MAX_SITES);
-  console.log('Sites to crawl:', sitesToCrawl);
+
+  // Truncate the file to clear old data
+  fs.writeFileSync(FILE_PATH, 'Product URL\n', 'utf8');
 
   const cluster = await Cluster.launch({
     concurrency: Cluster.CONCURRENCY_PAGE,
     maxConcurrency: MAX_CONCURRENCY,
     puppeteerOptions: {
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      args: ['--no-sandbox', '--disable-setuid-sandbox'], // Render-specific flags
     },
   });
 
@@ -113,8 +109,7 @@ const main = async (inputSites) => {
     const domain = new URL(site).hostname;
     const seenUrls = new Set();
 
-    console.log(`Enqueuing site: ${site}`);
-    // Queue the initial site for each domain
+    console.log(`Starting crawl for: ${site}`);
     await cluster.queue({ url: site, depth: MAX_DEPTH, domain, seenUrls });
   }
 
@@ -129,15 +124,6 @@ app.post('/start-crawl', async (req, res) => {
 
   if (!websites || !Array.isArray(websites)) {
     return res.status(400).json({ error: 'Please provide an array of website domains.' });
-  }
-
-  // Clear the file before starting a new crawl
-  try {
-    fs.writeFileSync(FILE_PATH, 'Product URL\n', 'utf8');
-    console.log('File cleared successfully.');
-  } catch (error) {
-    console.error('Error clearing the file:', error);
-    return res.status(500).json({ error: 'Failed to clear the file.' });
   }
 
   try {
@@ -171,10 +157,8 @@ app.get('/view-data', (req, res) => {
   const data = fs
     .readFileSync(FILE_PATH, 'utf8')
     .split('\n')
-    .slice(1) // Skip header
-    .filter((line) => line) // Remove empty lines
+    .filter((line) => line)
     .map((line) => ({ url: line }));
-
   res.json(data);
 });
 
