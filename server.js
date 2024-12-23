@@ -102,7 +102,8 @@ const main = async (inputSites) => {
     puppeteerOptions: {
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],// Render-specific flags
-      executablePath: executablePath, // Use Puppeteer's bundled Chromium
+      executablePath: executablePath,// Use Puppeteer's bundled Chromium
+      timeout: 180000, 
     },
   });
 
