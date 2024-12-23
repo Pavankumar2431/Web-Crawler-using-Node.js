@@ -88,7 +88,7 @@ const crawl = async ({ page, data }) => {
 // Main function to handle the crawling process
 const main = async (inputSites) => {
   const sitesToCrawl = inputSites.slice(0, MAX_SITES);
-  console.log('Puppeteer executable path:', puppeteer.executablePath());
+  
 
   const cluster = await Cluster.launch({
     concurrency: Cluster.CONCURRENCY_PAGE,
