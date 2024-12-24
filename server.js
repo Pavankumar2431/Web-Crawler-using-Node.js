@@ -7,13 +7,10 @@ const app = express();
 
 // Middleware to parse JSON body
 app.use(express.json());
-const executablePath = puppeteer.executablePath();
-console.log('Puppeteer executable path:', executablePath);
+
 // Constants
 const MAX_DEPTH = 2;
 const FILE_PATH = 'product_urls.csv';
-const MAX_SITES = 10;
-const MAX_CONCURRENCY = 5;
 
 // Ensure the CSV file exists with a header
 if (!fs.existsSync(FILE_PATH)) {
@@ -91,25 +88,21 @@ const crawl = async ({ page, data }) => {
 
 // Main function to handle the crawling process
 const main = async (inputSites) => {
-  const sitesToCrawl = inputSites.slice(0, MAX_SITES);
-
   // Truncate the file to clear old data
   fs.writeFileSync(FILE_PATH, 'Product URL\n', 'utf8');
 
   const cluster = await Cluster.launch({
     concurrency: Cluster.CONCURRENCY_PAGE,
-    maxConcurrency: MAX_CONCURRENCY,
+    maxConcurrency: 5, // Adjust maxConcurrency as needed
     puppeteerOptions: {
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],// Render-specific flags
-      executablePath: executablePath,// Use Puppeteer's bundled Chromium
-      timeout: 180000, 
+      args: ['--no-sandbox', '--disable-setuid-sandbox'], // Render-specific flags
     },
   });
 
   cluster.task(crawl);
 
-  for (const site of sitesToCrawl) {
+  for (const site of inputSites) {
     const domain = new URL(site).hostname;
     const seenUrls = new Set();
 
